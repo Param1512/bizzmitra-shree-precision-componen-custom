@@ -53,10 +53,10 @@ import {
   DOMAIN_SCHEMA 
 } from './lib/database';
 
-class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: ReactNode }) {
+class AppErrorBoundary extends Component<{ children?: ReactNode }, { hasError: boolean }> {
+  state: { hasError: boolean } = { hasError: false };
+  constructor(props: { children?: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
   }
   static getDerivedStateFromError() {
     return { hasError: true };
@@ -281,7 +281,7 @@ function SolutionApp() {
   const handleExportCsv = () => {
     const headers = [
       'ID',
-      DOMAIN_SCHEMA.columns?.titleLabel || 'Title',
+      (DOMAIN_SCHEMA.columns as any)?.titleLabel || 'Title',
       DOMAIN_SCHEMA.columns?.col1Label || 'Param 1',
       DOMAIN_SCHEMA.columns?.col2Label || 'Param 2',
       DOMAIN_SCHEMA.columns?.statusLabel || 'Status',
@@ -342,7 +342,7 @@ function SolutionApp() {
 
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 bg-emerald-600 shadow-emerald-500/20">
+          <div className="size-8 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 bg-cyan-600 shadow-cyan-500/20">
             <Building2 className="size-4" />
           </div>
           <div className="min-w-0">
@@ -385,7 +385,7 @@ function SolutionApp() {
           ) : (
             <button
               onClick={() => { setIsAuthModalOpen(true); if (isMobileView) setIsMobileMenuOpen(false); }}
-              className="w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-1 cursor-pointer"
+              className="w-full py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-bold text-white flex items-center justify-center gap-1 cursor-pointer"
             >
               <LogIn className="size-3" />
               <span>Log In / Demo Roles</span>
@@ -399,7 +399,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('overview'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'overview'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -413,7 +413,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('portal'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'portal'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -430,7 +430,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('architecture'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'architecture'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -444,7 +444,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('roadmap'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'roadmap'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -458,7 +458,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('team'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'team'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -472,7 +472,7 @@ function SolutionApp() {
             onClick={() => { setActiveTab('analytics'); if (isMobileView) setIsMobileMenuOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
               activeTab === 'analytics'
-                ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                ? 'bg-cyan-600 text-white shadow-sm font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
@@ -487,7 +487,7 @@ function SolutionApp() {
         <div className="pt-2 border-t border-slate-800 space-y-1.5">
           <button
             onClick={() => { setIsModalOpen(true); if (isMobileView) setIsMobileMenuOpen(false); }}
-            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold text-white transition cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-500"
+            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold text-white transition cursor-pointer shadow-md bg-cyan-600 hover:bg-cyan-500"
           >
             <Plus className="size-3.5" />
             <span>New {DOMAIN_SCHEMA.entityName}</span>
@@ -534,7 +534,7 @@ function SolutionApp() {
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 font-sans flex flex-col md:flex-row selection:bg-amber-500/30 selection:text-amber-200 antialiased overflow-x-hidden">
       {/* Toast Notification */}
       {authToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 border border-amber-400/40 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-cyan-600 border border-amber-400/40 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 duration-200">
           <Sparkles className="size-4 text-amber-300" />
           <span>{authToast}</span>
         </div>
@@ -545,7 +545,7 @@ function SolutionApp() {
       {/* ======================================================== */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-30 w-full shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="size-8 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 bg-emerald-600">
+          <div className="size-8 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 bg-cyan-600">
             <Building2 className="size-4" />
           </div>
           <div className="min-w-0">
@@ -726,7 +726,7 @@ function SolutionApp() {
                     <div className="text-slate-400 text-xs font-medium truncate">{kpi.label}</div>
                     <div className="font-bold text-white mt-1 text-xl sm:text-2xl">{kpi.value}</div>
                     <div className="text-[10px] sm:text-xs mt-0.5 font-semibold ${theme.primaryText}">
-                      {kpi.change || kpi.sub || '+12.4%'}
+                      {kpi.change || (kpi as any).sub || '+12.4%'}
                     </div>
                   </div>
                 ))}
@@ -894,7 +894,7 @@ function SolutionApp() {
                 </button>
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-lg text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-500"
+                  className="px-3.5 py-1.5 rounded-lg text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md bg-cyan-600 hover:bg-cyan-500"
                 >
                   <Plus className="size-3.5" />
                   <span>New {DOMAIN_SCHEMA.entityName}</span>
@@ -921,7 +921,7 @@ function SolutionApp() {
                   <tbody className="divide-y divide-slate-800/60">
                     {filteredItems.map(item => (
                       <tr key={item.id} className="hover:bg-slate-800/40 transition">
-                        <td className="py-3 px-4 font-mono font-bold text-emerald-400">{item.id}</td>
+                        <td className="py-3 px-4 font-mono font-bold text-cyan-400">{item.id}</td>
                         <td className="py-3 px-4 font-semibold text-white">{item.title}</td>
                         <td className="py-3 px-4 text-slate-300">{item.col1}</td>
                         <td className="py-3 px-4 text-slate-400">{item.col2}</td>
@@ -933,7 +933,7 @@ function SolutionApp() {
                               setItems(updated);
                               triggerToast(`Updated ${item.id} status to ${e.target.value}`);
                             }}
-                            className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-slate-950 border border-slate-700 text-emerald-400 cursor-pointer focus:outline-none"
+                            className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-slate-950 border border-slate-700 text-cyan-400 cursor-pointer focus:outline-none"
                           >
                             {(DOMAIN_SCHEMA.statuses || []).map(s => (
                               <option key={s} value={s}>{s}</option>
@@ -999,7 +999,7 @@ function SolutionApp() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white">{arch.name}</span>
+                        <span className="text-xs font-bold text-white">{arch.name || (arch as any).title}</span>
                         <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                           {arch.type}
                         </span>
@@ -1298,7 +1298,7 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                   <div key={idx} className="space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="font-semibold text-slate-300">{stage.stage}</span>
-                      <span className="font-mono text-indigo-300">{stage.count} items · {stage.time}</span>
+                      <span className="font-mono text-indigo-300">{stage.count} items · {(stage as any).time || (stage.pct ? (stage.pct + '%') : 'Active')}</span>
                     </div>
                     <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
                       <div 
@@ -1323,8 +1323,8 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
             PostgreSQL 16 · Supabase RLS · Deno Edge Workers
           </div>
         </footer>
-      </div>
-    </div>
+        </div>
+      </main>
 
       {/* Auth & Demo Logins Modal */}
       {isAuthModalOpen && (
@@ -1348,21 +1348,21 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
             <div className="flex border-b border-slate-800 bg-slate-950/40 p-1">
               <button
                 onClick={() => setAuthTab('demo')}
-                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'demo' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white')}
+                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'demo' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white')}
               >
                 <Zap className="size-3.5 text-amber-300" />
                 <span>⚡ 1-Click Demo Logins</span>
               </button>
               <button
                 onClick={() => setAuthTab('login')}
-                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'login' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white')}
+                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'login' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white')}
               >
                 <LogIn className="size-3.5" />
                 <span>Sign In</span>
               </button>
               <button
                 onClick={() => setAuthTab('signup')}
-                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'signup' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white')}
+                className={'flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ' + (authTab === 'signup' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white')}
               >
                 <UserPlus className="size-3.5" />
                 <span>Create Account</span>
@@ -1399,7 +1399,7 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                         </div>
                         <button
                           type="button"
-                          className="w-full mt-1 py-1.5 rounded-lg text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer bg-emerald-600 hover:bg-emerald-500"
+                          className="w-full mt-1 py-1.5 rounded-lg text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer bg-cyan-600 hover:bg-cyan-500"
                         >
                           <span>Log in as {u.role.split(' ')[0]}</span>
                           <ArrowRight className="size-3" />
@@ -1456,7 +1456,7 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-500"
+                      className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-md bg-cyan-600 hover:bg-cyan-500"
                     >
                       Sign In to Portal
                     </button>
@@ -1523,7 +1523,7 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                   <div className="pt-2 flex justify-end">
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-md bg-emerald-600 hover:bg-emerald-500"
+                      className="px-4 py-2 rounded-xl text-white text-xs font-bold transition cursor-pointer shadow-md bg-cyan-600 hover:bg-cyan-500"
                     >
                       Register & Enter Platform
                     </button>
@@ -1634,7 +1634,7 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer bg-emerald-600 hover:bg-emerald-500"
+                  className="rounded-xl px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer bg-cyan-600 hover:bg-cyan-500"
                 >
                   Save to Database
                 </button>
