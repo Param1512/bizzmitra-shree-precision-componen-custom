@@ -3,7 +3,23 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply m-0 p-0 selection:bg-indigo-500 selection:text-white bg-slate-950 text-slate-100;
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #020617;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0%;
   }
 }
