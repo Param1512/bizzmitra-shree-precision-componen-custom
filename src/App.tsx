@@ -298,27 +298,27 @@ function SolutionApp() {
       {/* Top Banner Navigation */}
       <header className="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="size-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
               <Building2 className="size-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white tracking-tight text-sm sm:text-base">{DOMAIN_SCHEMA.appTitle}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-white tracking-tight text-sm sm:text-base truncate">{DOMAIN_SCHEMA.appTitle}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 whitespace-nowrap shrink-0">
                   {DOMAIN_SCHEMA.domainName}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-md">{DOMAIN_SCHEMA.tagline}</p>
+              <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-xs md:max-w-md">{DOMAIN_SCHEMA.tagline}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {/* Live DB Telemetry Indicator */}
             <div 
               onClick={handlePingTest}
               title="Click to test live PostgreSQL & edge gateway latency"
-              className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/90 border border-slate-700/60 text-[11px] text-slate-300 cursor-pointer hover:border-indigo-500/50 transition"
+              className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/90 border border-slate-700/60 text-[11px] text-slate-300 cursor-pointer hover:border-indigo-500/50 transition shrink-0"
             >
               <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Postgres Live</span>
@@ -327,13 +327,17 @@ function SolutionApp() {
 
             {/* Current User & Auth Persona Pill */}
             {currentUser ? (
-              <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/70 rounded-xl p-1 pr-2.5">
-                <div className="size-7 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow">
-                  {currentUser.avatar || currentUser.name.charAt(0)}
+              <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/70 rounded-xl p-1 pr-2.5 shrink-0">
+                <div className="size-7 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow overflow-hidden shrink-0">
+                  {currentUser.avatar ? (
+                    <img src={currentUser.avatar} alt={currentUser.name} className="size-full object-cover" />
+                  ) : (
+                    <span>{currentUser.name ? currentUser.name.charAt(0) : 'U'}</span>
+                  )}
                 </div>
-                <div className="text-left hidden md:block leading-tight">
-                  <div className="text-xs font-semibold text-white truncate max-w-[110px]">{currentUser.name}</div>
-                  <div className="text-[10px] text-indigo-300 font-mono">{currentUser.role}</div>
+                <div className="text-left hidden md:block leading-tight max-w-[130px]">
+                  <div className="text-xs font-semibold text-white truncate">{currentUser.name}</div>
+                  <div className="text-[10px] text-indigo-300 font-mono truncate">{currentUser.role}</div>
                 </div>
                 <button
                   onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
@@ -911,8 +915,12 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
                       </span>
                     )}
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center font-bold text-indigo-300 text-sm">
-                        {u.avatar || u.name.charAt(0)}
+                      <div className="size-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center font-bold text-indigo-300 text-sm overflow-hidden shrink-0">
+                        {u.avatar ? (
+                          <img src={u.avatar} alt={u.name} className="size-full object-cover" />
+                        ) : (
+                          <span>{u.name ? u.name.charAt(0) : 'U'}</span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-white truncate">{u.name}</div>
