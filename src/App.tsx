@@ -13,6 +13,8 @@ import {
   TrendingUp, 
   Trash2, 
   FileSpreadsheet,
+  FileDown,
+  Layout,
   Zap,
   Activity,
   Boxes,
@@ -274,6 +276,41 @@ function SolutionApp() {
     triggerToast(`Added ${DOMAIN_SCHEMA.entityName} ${entry.id} to PostgreSQL database`);
   };
 
+  const handleExportCsv = () => {
+    const headers = [
+      'ID',
+      DOMAIN_SCHEMA.columns?.titleLabel || 'Title',
+      DOMAIN_SCHEMA.columns?.col1Label || 'Param 1',
+      DOMAIN_SCHEMA.columns?.col2Label || 'Param 2',
+      DOMAIN_SCHEMA.columns?.statusLabel || 'Status',
+      DOMAIN_SCHEMA.columns?.assigneeLabel || 'Assignee',
+      DOMAIN_SCHEMA.columns?.metricLabel || 'Metric',
+      'Created At',
+    ];
+
+    const rows = items.map(r => [
+      r.id,
+      `"${r.title.replace(/"/g, '""')}"`,
+      `"${r.col1.replace(/"/g, '""')}"`,
+      `"${r.col2.replace(/"/g, '""')}"`,
+      r.status,
+      `"${r.assignee.replace(/"/g, '""')}"`,
+      `"${r.metricVal}"`,
+      r.createdAt,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${DOMAIN_SCHEMA.domainKey}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    triggerToast(`Exported ${items.length} records to CSV!`);
+  };
+
   const filteredItems = useMemo(() => {
     return items.filter(it => {
       const matchSearch = it.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -286,316 +323,614 @@ function SolutionApp() {
   }, [items, search, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className={`min-h-screen bg-slate-950 text-slate-100 font-sans flex ${'flex-col md:flex-row'} selection:bg-amber-500/30 selection:text-amber-200`}>
       {/* Toast Notification */}
       {authToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-indigo-600 border border-indigo-400/40 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 bg-amber-600 border border-amber-400/40 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-3 duration-200">
           <Sparkles className="size-4 text-amber-300" />
           <span>{authToast}</span>
         </div>
       )}
 
-      {/* Top Banner Navigation */}
-      <header className="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="size-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
-              <Building2 className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-white tracking-tight text-sm sm:text-base truncate">{DOMAIN_SCHEMA.appTitle}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 whitespace-nowrap shrink-0">
-                  {DOMAIN_SCHEMA.domainName}
-                </span>
+      {/* ======================================================== */}
+      {/* OPTION A: LEFT SIDEBAR NAVIGATION (Desktop & Tablet)     */}
+      {/* Matches user's desired UI (Image 2)                      */}
+      {/* ======================================================== */}
+      {true && (
+        <aside className="w-full md:w-64 border-r border-slate-800 bg-slate-900/90 p-4 flex flex-col justify-between shrink-0">
+          <div className="space-y-4">
+            {/* Brand */}
+            <div className="flex items-center gap-2.5">
+              <div className="size-8 rounded-xl flex items-center justify-center text-white shadow-md shrink-0 bg-amber-600 shadow-amber-500/20">
+                <Building2 className="size-4" />
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-xs md:max-w-md">{DOMAIN_SCHEMA.tagline}</p>
+              <div className="min-w-0">
+                <h3 className="text-xs font-bold text-white tracking-tight truncate">
+                  {DOMAIN_SCHEMA.appTitle}
+                </h3>
+                <p className="text-[10px] text-slate-400 truncate">{DOMAIN_SCHEMA.domainName}</p>
+              </div>
+            </div>
+
+            {/* Session Persona Card in Sidebar */}
+            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/90 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
+                  Session Persona
+                </span>
+                <button
+                  onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
+                  className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer underline"
+                >
+                  Switch Role
+                </button>
+              </div>
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-full overflow-hidden border border-slate-700 shrink-0 bg-slate-800 flex items-center justify-center text-xs font-bold text-white">
+                    {currentUser.avatar ? (
+                      <img src={currentUser.avatar} alt={currentUser.name} className="size-full object-cover" />
+                    ) : (
+                      <span>{currentUser.name ? currentUser.name.charAt(0) : 'U'}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
+                    <div className="text-[10px] text-emerald-400 font-medium truncate">
+                      {currentUser.role}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="w-full py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <LogIn className="size-3" />
+                  <span>Log In / Demo Roles</span>
+                </button>
+              )}
+            </div>
+
+            {/* Sidebar Navigation Links (All 6 Modules) */}
+            <nav className="space-y-1 pt-1">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'overview'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Activity className="size-3.5" />
+                  <span className="truncate">Operations Command Center</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('portal')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'portal'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Layout className="size-3.5" />
+                  <span className="truncate">{DOMAIN_SCHEMA.entityPlural} Workflow</span>
+                </div>
+                <span className="text-[10px] bg-slate-950/60 px-1.5 py-0.2 rounded-full font-mono text-slate-300">
+                  {items.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('architecture')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'architecture'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Cpu className="size-3.5" />
+                  <span className="truncate">Architecture & DB Telemetry</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('roadmap')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'roadmap'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Layers className="size-3.5" />
+                  <span className="truncate">Execution Roadmap & Sprints</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('team')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'team'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Users className="size-3.5" />
+                  <span className="truncate">Team & Role Access Control</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
+                  activeTab === 'analytics'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <BarChart3 className="size-3.5" />
+                  <span className="truncate">Performance & SLA Intelligence</span>
+                </div>
+              </button>
+            </nav>
+
+            {/* Quick Actions in Sidebar */}
+            <div className="pt-2 border-t border-slate-800 space-y-1.5">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 px-3 text-xs font-bold text-white transition cursor-pointer shadow-md bg-amber-600 hover:bg-amber-500"
+              >
+                <Plus className="size-3.5" />
+                <span>New {DOMAIN_SCHEMA.entityName}</span>
+              </button>
+
+              <button
+                onClick={handleExportCsv}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 py-1.5 px-3 text-xs font-semibold text-slate-300 transition cursor-pointer"
+              >
+                <FileDown className="size-3.5 text-emerald-400" />
+                <span>Export CSV</span>
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Live DB Telemetry Indicator */}
-            <div 
-              onClick={handlePingTest}
-              title="Click to test live PostgreSQL & edge gateway latency"
-              className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/90 border border-slate-700/60 text-[11px] text-slate-300 cursor-pointer hover:border-indigo-500/50 transition shrink-0"
-            >
-              <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Postgres Live</span>
+          {/* Sidebar Bottom Sync Badge */}
+          <div className="pt-3 border-t border-slate-800 space-y-1.5 text-[10px] text-slate-400">
+            <div className="flex items-center justify-between">
+              <div 
+                onClick={handlePingTest}
+                className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-300 transition"
+                title="Click to ping PostgreSQL latency"
+              >
+                <Database className="size-3 text-emerald-400" />
+                <span>PostgreSQL 16 Live</span>
+              </div>
               <span className="font-mono text-emerald-400 font-bold">{isPinging ? '...' : `${dbLatency}ms`}</span>
             </div>
-
-            {/* Current User & Auth Persona Pill */}
-            {currentUser ? (
-              <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/70 rounded-xl p-1 pr-2.5 shrink-0">
-                <div className="size-7 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow overflow-hidden shrink-0">
-                  {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt={currentUser.name} className="size-full object-cover" />
-                  ) : (
-                    <span>{currentUser.name ? currentUser.name.charAt(0) : 'U'}</span>
-                  )}
-                </div>
-                <div className="text-left hidden md:block leading-tight max-w-[130px]">
-                  <div className="text-xs font-semibold text-white truncate">{currentUser.name}</div>
-                  <div className="text-[10px] text-indigo-300 font-mono truncate">{currentUser.role}</div>
-                </div>
-                <button
-                  onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
-                  title="Switch Role / View 1-Click Demo Logins"
-                  className="p-1 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-[11px]"
-                >
-                  <KeyRound className="size-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Roles</span>
-                </button>
-                <button
-                  onClick={handleSignOut}
-                  title="Sign Out"
-                  className="p-1 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition cursor-pointer"
-                >
-                  <LogOut className="size-3.5" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  <KeyRound className="size-3.5" />
-                  <span>1-Click Demo Roles</span>
-                </button>
-                <button
-                  onClick={() => { setAuthTab('login'); setIsAuthModalOpen(true); }}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm shadow-indigo-600/30"
-                >
-                  <LogIn className="size-3.5" />
-                  <span>Sign In</span>
-                </button>
-              </div>
-            )}
+            <div className="flex items-center justify-between text-slate-500">
+              <span>SSL & RLS Active</span>
+              <button
+                onClick={handleSignOut}
+                className="hover:text-rose-400 transition cursor-pointer flex items-center gap-1"
+              >
+                <LogOut className="size-2.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </aside>
+      )}
 
-        {/* 6 Core Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto scrollbar-none py-1 border-t border-slate-800/60">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'overview'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <Activity className="size-3.5" />
-            <span>Overview & Activity</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('portal')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'portal'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <Boxes className="size-3.5" />
-            <span>{DOMAIN_SCHEMA.entityPlural} Registry</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">{items.length}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('architecture')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'architecture'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <Server className="size-3.5" />
-            <span>Architecture & DB Telemetry</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('roadmap')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'roadmap'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <CheckSquare className="size-3.5" />
-            <span>Roadmap & Sprints</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300">Live</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('team')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'team'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <Users className="size-3.5" />
-            <span>Team & RBAC Matrix</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300">{users.length}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('analytics')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'analytics'
-                ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-            }`}
-          >
-            <TrendingUp className="size-3.5" />
-            <span>Performance & SLA</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        {/* Dynamic Business Problem Statement & AI Blueprint Hero Banner */}
-        <section className="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800/80 p-5 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
-            <Sparkles className="size-36 text-indigo-400" />
-          </div>
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-3xl">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-                  <Sparkles className="size-3" /> Autonomous AI Discovery
-                </span>
-                <span className="text-[11px] text-slate-400">Production Blueprint Ready</span>
-              </div>
-              <h1 className="text-base sm:text-lg font-bold text-white leading-snug">
-                "{DOMAIN_SCHEMA.problemStatement}"
-              </h1>
-              <p className="text-xs text-slate-300">
-                End-to-end operational software suite synthesizing database schema, role RBAC, execution sprints, and real-time SLA telemetry.
-              </p>
+      {/* Main Content Pane */}
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
+        {/* Top Header */}
+        {true ? (
+          /* Header Variant 2: Desktop/Tablet with Left Sidebar (Matches Image 2) */
+          <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {activeTab === 'overview' ? 'OPERATIONS COMMAND CENTER' :
+                 activeTab === 'portal' ? `${DOMAIN_SCHEMA.entityPlural.toUpperCase()} WORKFLOW` :
+                 activeTab === 'architecture' ? 'ARCHITECTURE & DB TELEMETRY' :
+                 activeTab === 'roadmap' ? 'EXECUTION ROADMAP & SPRINTS' :
+                 activeTab === 'team' ? 'TEAM & ROLE ACCESS CONTROL' : 'PERFORMANCE & SLA INTELLIGENCE'}
+              </h4>
+              <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">
+                · {DOMAIN_SCHEMA.entityPlural} Architecture
+              </span>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
-              <button 
-                onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
-                className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/10"
-              >
-                <KeyRound className="size-4" />
-                <span>Demo Logins ({DOMAIN_SCHEMA.demoUsers?.length || 4} Roles)</span>
-              </button>
+            <div className="flex items-center gap-3">
+              {/* Persona Indicator Badge */}
+              {currentUser && (
+                <div className="flex items-center gap-2 bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-800 text-xs">
+                  <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-slate-300 font-semibold">{currentUser.name}</span>
+                  <span className="text-[10px] text-amber-400 font-mono bg-amber-950/60 px-1.5 py-0.2 rounded hidden sm:inline">
+                    {currentUser.role}
+                  </span>
+                </div>
+              )}
+
               <button
-                onClick={() => { setActiveTab('portal'); setIsModalOpen(true); }}
-                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
+                onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs font-bold text-slate-200 transition cursor-pointer"
               >
-                <Plus className="size-4" />
+                <KeyRound className="size-3 text-amber-400" />
+                <span>Demo Logins & RBAC</span>
+              </button>
+
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition cursor-pointer bg-amber-600 hover:bg-amber-500"
+              >
+                <Plus className="size-3.5" />
                 <span>New {DOMAIN_SCHEMA.entityName}</span>
               </button>
             </div>
           </div>
-        </section>
-
-        {/* Tab 1: Operational Overview */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Top KPI Metric Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {(DOMAIN_SCHEMA.kpis || []).map((kpi, idx) => (
-                <div key={idx} className="rounded-xl bg-slate-900/90 border border-slate-800/80 p-4 space-y-1 hover:border-slate-700 transition">
-                  <div className="text-[11px] font-semibold text-slate-400">{kpi.label}</div>
-                  <div className="text-2xl font-extrabold text-white tracking-tight">{kpi.value}</div>
-                  <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                    <TrendingUp className="size-3" />
-                    <span>{kpi.sub}</span>
+        ) : (
+          /* Header Variant 3: Top Navigation Layout */
+          <header className="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-9 rounded-xl flex items-center justify-center shadow-lg text-white shrink-0 bg-amber-600 shadow-amber-500/20">
+                  <Building2 className="size-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-white tracking-tight text-sm sm:text-base truncate">{DOMAIN_SCHEMA.appTitle}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap shrink-0 border bg-amber-500/15 text-amber-400 border-amber-500/30">
+                      {DOMAIN_SCHEMA.domainName}
+                    </span>
                   </div>
+                  <p className="text-[11px] text-slate-400 hidden sm:block truncate max-w-xs md:max-w-md">{DOMAIN_SCHEMA.tagline}</p>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <div 
+                  onClick={handlePingTest}
+                  title="Click to test live PostgreSQL & edge gateway latency"
+                  className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/90 border border-slate-700/60 text-[11px] text-slate-300 cursor-pointer hover:border-amber-500/50 transition shrink-0"
+                >
+                  <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Postgres Live</span>
+                  <span className="font-mono text-emerald-400 font-bold">{isPinging ? '...' : `${dbLatency}ms`}</span>
+                </div>
+
+                {currentUser ? (
+                  <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/70 rounded-xl p-1 pr-2.5 shrink-0">
+                    <div className="size-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow overflow-hidden shrink-0 bg-amber-600">
+                      {currentUser.avatar ? (
+                        <img src={currentUser.avatar} alt={currentUser.name} className="size-full object-cover" />
+                      ) : (
+                        <span>{currentUser.name ? currentUser.name.charAt(0) : 'U'}</span>
+                      )}
+                    </div>
+                    <div className="text-left hidden md:block leading-tight max-w-[130px]">
+                      <div className="text-xs font-semibold text-white truncate">{currentUser.name}</div>
+                      <div className="text-[10px] font-mono truncate text-amber-400">{currentUser.role}</div>
+                    </div>
+                    <button
+                      onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
+                      title="Switch Role / View 1-Click Demo Logins"
+                      className="p-1 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-[11px]"
+                    >
+                      <KeyRound className="size-3.5 text-amber-400" />
+                      <span className="hidden sm:inline">Roles</span>
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      title="Sign Out"
+                      className="p-1 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition cursor-pointer"
+                    >
+                      <LogOut className="size-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <KeyRound className="size-3.5" />
+                      <span>1-Click Demo Roles</span>
+                    </button>
+                    <button
+                      onClick={() => { setAuthTab('login'); setIsAuthModalOpen(true); }}
+                      className="px-3 py-1.5 rounded-xl text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm bg-amber-600 hover:bg-amber-500"
+                    >
+                      <LogIn className="size-3.5" />
+                      <span>Sign In</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Split Panel: Legacy Bottleneck vs AI Autonomous Solution */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-xl bg-rose-950/20 border border-rose-900/40 p-5 space-y-2">
-                <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider">
-                  <AlertCircle className="size-4" />
-                  <span>Identified Legacy Operational Bottlenecks</span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Fragmented spreadsheets, manual status updates, lack of SLA visibility, and uncoordinated role handoffs cause systemic delay across the {DOMAIN_SCHEMA.domainName} value chain.
-                </p>
-                <div className="pt-2 flex flex-wrap gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-900/40 text-rose-300 border border-rose-800/50">Manual Handoffs</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-900/40 text-rose-300 border border-rose-800/50">Zero Realtime Auditing</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-900/40 text-rose-300 border border-rose-800/50">SLA Blindspots</span>
-                </div>
-              </div>
+            {/* 6 Core Navigation Tabs */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 overflow-x-auto scrollbar-none py-1 border-t border-slate-800/60">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'overview'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Activity className="size-3.5" />
+                <span>Overview & Activity</span>
+              </button>
 
-              <div className="rounded-xl bg-indigo-950/20 border border-indigo-900/40 p-5 space-y-2">
-                <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="size-4" />
-                  <span>Synthesized Autonomous Solution Architecture</span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Automated PostgreSQL ingestion, role-scoped dispatch queues, edge event listeners, and live SLA tracking directly streamline operations with zero data loss.
-                </p>
-                <div className="pt-2 flex flex-wrap gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-900/40 text-indigo-300 border border-indigo-800/50">PostgreSQL RLS Protected</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-900/40 text-indigo-300 border border-indigo-800/50">4-Role RBAC Governance</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-900/40 text-indigo-300 border border-indigo-800/50">Realtime Edge Webhooks</span>
-                </div>
-              </div>
+              <button
+                onClick={() => setActiveTab('portal')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'portal'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Boxes className="size-3.5" />
+                <span>{DOMAIN_SCHEMA.entityPlural} Workflow</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">{items.length}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('architecture')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'architecture'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Server className="size-3.5" />
+                <span>Architecture & DB Telemetry</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('roadmap')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'roadmap'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <CheckSquare className="size-3.5" />
+                <span>Roadmap & Sprints</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300">Live</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('team')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'team'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <Users className="size-3.5" />
+                <span>Team & RBAC Matrix</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">{users.length}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'analytics'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                <TrendingUp className="size-3.5" />
+                <span>Performance & SLA</span>
+              </button>
             </div>
+          </header>
+        )}
 
-            {/* Throughput Funnel & Event Activity Stream */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 rounded-xl bg-slate-900/90 border border-slate-800/80 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <BarChart3 className="size-4 text-indigo-400" />
-                    <span>Operational Pipeline & Throughput Stages</span>
-                  </h3>
-                  <span className="text-[11px] text-slate-400">End-to-End Funnel</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {(DOMAIN_SCHEMA.funnelStages || []).map((st, i) => (
-                    <div key={i} className="rounded-lg bg-slate-950 border border-slate-800 p-3 space-y-1 text-center">
-                      <div className="text-[10px] text-slate-400 font-semibold">{st.stage}</div>
-                      <div className="text-xl font-bold text-white">{st.count}</div>
-                      <div className="text-[10px] text-indigo-400 font-mono">{st.time}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-slate-900/90 border border-slate-800/80 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Activity className="size-4 text-emerald-400" />
-                    <span>Live Audit Stream</span>
-                  </h3>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">Realtime</span>
-                </div>
-                <div className="space-y-3">
-                  {(DOMAIN_SCHEMA.activities || []).map((act, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs pb-2 border-b border-slate-800/60 last:border-0 last:pb-0">
-                      <div className="size-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-slate-200 font-medium">{act.text}</div>
-                        <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
-                          <Clock className="size-2.5" />
-                          <span>{act.time}</span>
-                          <span>·</span>
-                          <span className="font-mono text-indigo-400">{act.user}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        {/* Active User Persona Banner (Matches Image 2 Sub-bar) */}
+        {currentUser && (
+          <div className="bg-slate-900/60 border-b border-slate-800/80 px-4 sm:px-6 py-1.5 text-[11px] flex items-center justify-between text-slate-300 shrink-0">
+            <div className="flex items-center gap-2 truncate">
+              <span className="text-slate-500 font-bold uppercase text-[9px]">Active Persona:</span>
+              <span className="font-semibold text-white truncate">{currentUser.name}</span>
+              <span className="text-slate-500">•</span>
+              <span className="font-medium truncate text-amber-400">{currentUser.role}</span>
+              <span className="hidden md:inline text-slate-500">•</span>
+              <span className="hidden md:inline text-slate-400">{currentUser.department}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[10px] text-slate-400 hidden sm:inline">
+                {currentUser.permissions?.slice(0, 2).join(', ')}
+              </span>
+              <button
+                onClick={() => { setAuthTab('demo'); setIsAuthModalOpen(true); }}
+                className="text-[10px] font-bold underline cursor-pointer hover:opacity-80 text-amber-400"
+              >
+                Switch Role
+              </button>
             </div>
           </div>
         )}
+
+        {/* Main Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          {/* Tab 1: Operational Overview (Matches Image 2 Hero Card & Problem Solved Box) */}
+          {activeTab === 'overview' && (
+            <div className="space-y-5">
+              {/* Hero Banner tailored to Problem Statement */}
+              <div className="rounded-2xl border bg-gradient-to-r via-slate-900 to-slate-950 p-5 sm:p-6 space-y-3 border-amber-500/30 from-amber-950/40">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold uppercase tracking-wider px-2 py-0.5 rounded border text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30">
+                    {DOMAIN_SCHEMA.domainName}
+                  </span>
+                  <span className="rounded-full bg-emerald-500/20 text-emerald-300 px-2 py-0.5 text-[9px] font-mono font-bold">
+                    BizzMitra AI Discovery Blueprint
+                  </span>
+                </div>
+
+                <h4 className="font-bold text-white tracking-tight text-lg sm:text-xl">
+                  {DOMAIN_SCHEMA.appTitle}
+                </h4>
+
+                {/* Exact Problem Statement Ingested */}
+                <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 text-slate-300 leading-relaxed max-w-3xl p-3 text-xs">
+                  <span className="font-bold text-white block mb-0.5">Problem Solved:</span>
+                  "{DOMAIN_SCHEMA.problemStatement}"
+                </div>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    onClick={() => setActiveTab('portal')}
+                    className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow transition cursor-pointer bg-amber-600 hover:bg-amber-500"
+                  >
+                    <span>Open {DOMAIN_SCHEMA.entityPlural} Workflow</span>
+                    <ArrowRight className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('architecture')}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition cursor-pointer"
+                  >
+                    <Cpu className="size-3.5 text-amber-400" />
+                    <span>Inspect Architecture</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Domain KPIs */}
+              <div className="grid gap-2.5 sm:gap-3 grid-cols-2 sm:grid-cols-4">
+                {(DOMAIN_SCHEMA.kpis || []).map((kpi, idx) => (
+                  <div key={idx} className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <div className="text-slate-400 text-[10px] sm:text-xs font-medium truncate">{kpi.label}</div>
+                    <div className="font-bold text-white mt-1 text-xl">{kpi.value}</div>
+                    <div className="text-[10px] mt-0.5 font-semibold text-amber-400">
+                      {kpi.change || kpi.sub || '+12.4%'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Operational Funnel & Bottlenecks Panel */}
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                {/* Processing Funnel */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">
+                      End-to-End {DOMAIN_SCHEMA.entityName} Funnel
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Real-Time Throughput</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    {(DOMAIN_SCHEMA.funnelStages || []).map((stage, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs text-slate-300">
+                          <span className="truncate">{stage.stage}</span>
+                          <span className="font-bold text-white shrink-0 ml-2">{stage.count}</span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500 bg-amber-600"
+                            style={{ width: `${stage.pct || Math.max(20, 100 - idx * 20)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bottlenecks Resolution & Platform Architecture Strategy */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">Discovery Bottlenecks & Strategic Fix</span>
+                    <span className="text-[10px] text-emerald-400 font-mono">100% Automated</span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center gap-1.5 text-rose-400 font-bold text-[11px]">
+                        <AlertCircle className="size-3" />
+                        <span>Legacy Bottleneck Identified:</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        {DOMAIN_SCHEMA.problemStatement.slice(0, 160)}...
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                        <CheckCircle2 className="size-3" />
+                        <span>Autonomous Architecture Solution:</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300">
+                        Synthesized PostgreSQL persistence schema, real-time edge processing, and automated validation rules.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Records & Real-Time Ingestion Preview */}
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">Recent {DOMAIN_SCHEMA.entityPlural} Ingestion</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono font-semibold">
+                      Live Database Sync
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('portal')}
+                    className="text-xs text-amber-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View All ({items.length})</span>
+                    <ArrowRight className="size-3" />
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-300">
+                    <thead className="bg-slate-950/80 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                      <tr>
+                        <th className="py-2.5 px-3">Identifier</th>
+                        <th className="py-2.5 px-3">{DOMAIN_SCHEMA.entityName}</th>
+                        <th className="py-2.5 px-3">{DOMAIN_SCHEMA.columns?.col1Label || 'Column 1'}</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3">{DOMAIN_SCHEMA.columns?.assigneeLabel || 'Assignee'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {items.slice(0, 4).map((r) => (
+                        <tr key={r.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-2 px-3 font-mono text-[11px] text-amber-400 font-semibold">{r.id}</td>
+                          <td className="py-2 px-3 font-medium text-white">{r.title}</td>
+                          <td className="py-2 px-3 text-slate-400">{r.col1}</td>
+                          <td className="py-2 px-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              r.status === 'Completed' || r.status === 'Verified' || r.status === 'Resolved' || r.status === 'Approved'
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : r.status === 'In Progress' || r.status === 'Processing' || r.status === 'Pending' || r.status === 'Draft'
+                                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                : 'bg-slate-700/50 text-slate-300 border border-slate-600/30'
+                            }`}>
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-slate-300">{r.assignee}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Tab 2: Operational Data Portal / Entity Registry */}
         {activeTab === 'portal' && (
@@ -1064,7 +1399,8 @@ ALTER TABLE public.${DOMAIN_SCHEMA.domainKey}_records ENABLE ROW LEVEL SECURITY;
             </div>
           </div>
         )}
-      </main>
+      </div>
+    </div>
 
       {/* Auth & Demo Logins Modal */}
       {isAuthModalOpen && (
